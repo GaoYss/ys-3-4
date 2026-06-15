@@ -382,6 +382,21 @@ textarea:focus {
   margin-top: 6px;
 }
 
+.on-time-info {
+  color: #15803d;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.record-notes {
+  display: block;
+  margin-top: 4px;
+  color: #475569;
+  font-size: 12px;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

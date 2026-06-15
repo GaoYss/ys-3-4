@@ -1,8 +1,7 @@
 import { CheckCircle2, Handshake, Save, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { api } from '../api/client.js'
-import { borrowStatuses } from '../api/options.js'
 import { EmptyState } from '../components/EmptyState.jsx'
 import { StatusBadge } from '../components/StatusBadge.jsx'
 
@@ -40,10 +39,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
     event.preventDefault()
     setSaving(true)
     try {
-      const payload = { ...form, license: Number(form.license) }
-      if (!payload.actual_return_date) {
-        payload.actual_return_date = null
-      }
+      const payload = { ...form, license: Number(form.license), actual_return_date: null, status: 'borrowed' }
       await api.createBorrowRecord(payload)
       setForm(initialForm)
       await reload()
@@ -54,6 +50,11 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
       setSaving(false)
     }
   }
+
+  const isReturnOverdue = useMemo(() => {
+    if (!returnModal || !returnForm.actual_return_date) return false
+    return returnForm.actual_return_date > returnModal.expected_return_date
+  }, [returnModal, returnForm.actual_return_date])
 
   const confirmReturn = async (event) => {
     event.preventDefault()
@@ -116,18 +117,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
             <Field label="借用部门" value={form.borrower_department} onChange={(value) => setField('borrower_department', value)} required />
             <Field label="借出日期" type="date" value={form.borrow_date} onChange={(value) => setField('borrow_date', value)} required />
             <Field label="预计归还" type="date" value={form.expected_return_date} onChange={(value) => setField('expected_return_date', value)} required />
-            <label className="field">
-              <span>状态</span>
-              <select value={form.status} onChange={(event) => setField('status', event.target.value)}>
-                {borrowStatuses.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
             <Field label="用途" value={form.purpose} onChange={(value) => setField('purpose', value)} required />
-            <Field label="实际归还" type="date" value={form.actual_return_date} onChange={(value) => setField('actual_return_date', value)} />
           </div>
           <label className="field full">
             <span>备注</span>
@@ -143,7 +133,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
           {borrowRecords.length ? (
             <div className="data-table">
               <div className="table-head borrow-row">
-                <span>证照</span>
+                <span>证照 / 用途</span>
                 <span>借用人</span>
                 <span>预计归还</span>
                 <span>实际归还</span>
@@ -155,6 +145,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
                   <div>
                     <strong>{record.license_name}</strong>
                     <span>{record.purpose}</span>
+                    {record.notes && <span className="record-notes">📝 {record.notes}</span>}
                   </div>
                   <span>{record.borrower}</span>
                   <span>{record.expected_return_date}</span>
@@ -197,8 +188,10 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
                   <p><strong>证照：</strong>{returnModal.license_name}</p>
                   <p><strong>借用人：</strong>{returnModal.borrower}</p>
                   <p><strong>预计归还：</strong>{returnModal.expected_return_date}</p>
-                  {returnModal.expected_return_date < new Date().toISOString().slice(0, 10) && (
-                    <p className="overdue-warning">⚠️ 当前已超过预计归还日期</p>
+                  {isReturnOverdue ? (
+                    <p className="overdue-warning">⚠️ 所选归还日期晚于预计归还日期，本次为逾期归还</p>
+                  ) : (
+                    <p className="on-time-info">✅ 所选归还日期在预计归还日期之前</p>
                   )}
                 </div>
                 <label className="field full">
