@@ -13,10 +13,17 @@ def refresh_license_status(license_obj):
 
 
 def refresh_borrow_status(record):
-    computed_status = record.computed_status
-    if record.status != computed_status:
-        record.status = computed_status
-        record.save(update_fields=["status", "updated_at"])
+    today = timezone.localdate()
+    if record.actual_return_date:
+        if record.actual_return_date > record.expected_return_date:
+            record.was_overdue = True
+        record.status = BorrowRecord.Status.RETURNED
+    elif record.expected_return_date < today:
+        record.was_overdue = True
+        record.status = BorrowRecord.Status.OVERDUE
+    else:
+        record.status = BorrowRecord.Status.BORROWED
+    record.save(update_fields=["status", "was_overdue", "updated_at"])
     return record
 
 
@@ -40,6 +47,8 @@ def dashboard_stats():
         "expired_licenses": status_counts.get(License.Status.EXPIRED, 0),
         "borrowed_records": BorrowRecord.objects.filter(status=BorrowRecord.Status.BORROWED).count(),
         "overdue_returns": BorrowRecord.objects.filter(status=BorrowRecord.Status.OVERDUE).count(),
+        "total_overdue_history": BorrowRecord.objects.filter(was_overdue=True).count(),
+        "returned_after_overdue": BorrowRecord.objects.filter(was_overdue=True, status=BorrowRecord.Status.RETURNED).count(),
         "by_type": type_counts,
         "upcoming_expiries": License.objects.filter(expiry_date__gte=today).order_by("expiry_date")[:8],
         "expired": License.objects.filter(expiry_date__lt=today).order_by("expiry_date")[:8],

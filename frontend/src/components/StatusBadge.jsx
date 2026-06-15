@@ -8,6 +8,8 @@ const statusLabels = {
   overdue: '逾期未还',
 }
 
-export function StatusBadge({ status }) {
-  return <span className={`status status-${status}`}>{statusLabels[status] || status}</span>
+export function StatusBadge({ status, wasOverdue }) {
+  const displayStatus = status === 'returned' && wasOverdue ? 'returned-overdue' : status
+  const label = status === 'returned' && wasOverdue ? '已归还(曾逾期)' : statusLabels[status] || status
+  return <span className={`status status-${displayStatus}`}>{label}</span>
 }

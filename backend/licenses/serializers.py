@@ -37,6 +37,7 @@ class BorrowRecordSerializer(serializers.ModelSerializer):
     license_name = serializers.CharField(source="license.name", read_only=True)
     computed_status = serializers.CharField(read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    was_overdue = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = BorrowRecord
@@ -53,6 +54,7 @@ class BorrowRecordSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "computed_status",
+            "was_overdue",
             "notes",
             "created_at",
             "updated_at",

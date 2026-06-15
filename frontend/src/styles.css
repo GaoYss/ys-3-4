@@ -132,7 +132,7 @@ h2 {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 14px;
 }
 
@@ -165,6 +165,10 @@ h2 {
 
 .metric-danger strong {
   color: #b91c1c;
+}
+
+.metric-success strong {
+  color: #15803d;
 }
 
 .content-grid {
@@ -324,7 +328,7 @@ textarea:focus {
 }
 
 .borrow-row {
-  grid-template-columns: minmax(160px, 1.6fr) minmax(80px, 0.7fr) minmax(95px, 0.8fr) minmax(90px, 0.7fr) minmax(76px, 0.6fr);
+  grid-template-columns: minmax(160px, 1.6fr) minmax(80px, 0.7fr) minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(110px, 0.7fr) minmax(76px, 0.6fr);
 }
 
 .status {
@@ -360,6 +364,103 @@ textarea:focus {
 .status-archived {
   color: #475569;
   background: #e2e8f0;
+}
+
+.status-returned-overdue {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.overdue-tag {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.overdue-warning {
+  color: #b91c1c;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(24 32 51 / 55%);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 30px 60px rgb(24 32 51 / 25%);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-header .icon-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.modal-body {
+  padding: 18px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.modal-info {
+  background: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.modal-info p {
+  margin: 0;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.modal-footer .primary-button {
+  width: auto;
+  margin-top: 0;
+  padding: 9px 16px;
+}
+
+.modal-footer .ghost-button {
+  padding: 9px 16px;
+  background: #fff;
+  border: 1px solid #dce3ec;
+  color: #475569;
 }
 
 .record-list,

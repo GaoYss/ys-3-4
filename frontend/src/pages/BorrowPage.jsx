@@ -1,4 +1,4 @@
-import { CheckCircle2, Handshake, Save } from 'lucide-react'
+import { CheckCircle2, Handshake, Save, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { api } from '../api/client.js'
@@ -21,8 +21,20 @@ const initialForm = {
 export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
   const [form, setForm] = useState(initialForm)
   const [saving, setSaving] = useState(false)
+  const [returnModal, setReturnModal] = useState(null)
+  const [returnForm, setReturnForm] = useState({ actual_return_date: '', return_notes: '' })
 
   const setField = (field, value) => setForm((current) => ({ ...current, [field]: value }))
+
+  const openReturnModal = (record) => {
+    const today = new Date().toISOString().slice(0, 10)
+    setReturnForm({ actual_return_date: today, return_notes: '' })
+    setReturnModal(record)
+  }
+
+  const closeReturnModal = () => {
+    setReturnModal(null)
+  }
 
   const submit = async (event) => {
     event.preventDefault()
@@ -43,9 +55,17 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
     }
   }
 
-  const markReturned = async (record) => {
-    const today = new Date().toISOString().slice(0, 10)
+  const confirmReturn = async (event) => {
+    event.preventDefault()
+    if (!returnModal) return
+    const record = returnModal
     try {
+      const existingNotes = record.notes || ''
+      const newNotes = returnForm.return_notes
+        ? existingNotes
+          ? `${existingNotes}\n归还备注：${returnForm.return_notes}`
+          : `归还备注：${returnForm.return_notes}`
+        : existingNotes
       await api.updateBorrowRecord(record.id, {
         license: record.license,
         borrower: record.borrower,
@@ -53,10 +73,11 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
         purpose: record.purpose,
         borrow_date: record.borrow_date,
         expected_return_date: record.expected_return_date,
-        actual_return_date: today,
+        actual_return_date: returnForm.actual_return_date,
         status: 'returned',
-        notes: record.notes,
+        notes: newNotes,
       })
+      setReturnModal(null)
       await reload()
       notify('已登记归还')
     } catch (error) {
@@ -125,6 +146,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
                 <span>证照</span>
                 <span>借用人</span>
                 <span>预计归还</span>
+                <span>实际归还</span>
                 <span>状态</span>
                 <span>操作</span>
               </div>
@@ -136,11 +158,17 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
                   </div>
                   <span>{record.borrower}</span>
                   <span>{record.expected_return_date}</span>
-                  <StatusBadge status={record.computed_status} />
+                  <span>
+                    {record.actual_return_date || '—'}
+                    {record.was_overdue && record.computed_status === 'returned' && (
+                      <span className="overdue-tag">⚠️</span>
+                    )}
+                  </span>
+                  <StatusBadge status={record.computed_status} wasOverdue={record.was_overdue} />
                   {record.computed_status === 'returned' ? (
-                    <span className="muted">{record.actual_return_date}</span>
+                    <span className="muted">已归还</span>
                   ) : (
-                    <button className="ghost-button" type="button" onClick={() => markReturned(record)} title="登记归还">
+                    <button className="ghost-button" type="button" onClick={() => openReturnModal(record)} title="登记归还">
                       <CheckCircle2 size={16} />
                       <span>归还</span>
                     </button>
@@ -153,6 +181,57 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
           )}
         </div>
       </div>
+
+      {returnModal && (
+        <div className="modal-overlay" onClick={closeReturnModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={confirmReturn}>
+              <div className="modal-header">
+                <h3>登记归还</h3>
+                <button type="button" className="icon-button" onClick={closeReturnModal} aria-label="关闭">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="modal-info">
+                  <p><strong>证照：</strong>{returnModal.license_name}</p>
+                  <p><strong>借用人：</strong>{returnModal.borrower}</p>
+                  <p><strong>预计归还：</strong>{returnModal.expected_return_date}</p>
+                  {returnModal.expected_return_date < new Date().toISOString().slice(0, 10) && (
+                    <p className="overdue-warning">⚠️ 当前已超过预计归还日期</p>
+                  )}
+                </div>
+                <label className="field full">
+                  <span>实际归还日期</span>
+                  <input
+                    type="date"
+                    value={returnForm.actual_return_date}
+                    min={returnModal.borrow_date}
+                    onChange={(event) => setReturnForm((c) => ({ ...c, actual_return_date: event.target.value }))}
+                    required
+                  />
+                </label>
+                <label className="field full">
+                  <span>归还备注</span>
+                  <textarea
+                    value={returnForm.return_notes}
+                    onChange={(event) => setReturnForm((c) => ({ ...c, return_notes: event.target.value }))}
+                    placeholder="可选，记录归还时的情况说明"
+                    rows={3}
+                  />
+                </label>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="ghost-button" onClick={closeReturnModal}>取消</button>
+                <button type="submit" className="primary-button">
+                  <CheckCircle2 size={16} />
+                  <span>确认归还</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

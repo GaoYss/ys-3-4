@@ -23,6 +23,9 @@ export function StatsPage({ stats }) {
         <MetricCard label="即将到期" value={stats?.expiring_licenses} tone="warning" />
         <MetricCard label="已到期" value={stats?.expired_licenses} tone="danger" />
         <MetricCard label="借出中" value={stats?.borrowed_records} />
+        <MetricCard label="当前逾期未还" value={stats?.overdue_returns} tone="danger" />
+        <MetricCard label="历史逾期记录" value={stats?.total_overdue_history} tone="warning" />
+        <MetricCard label="逾期后已归还" value={stats?.returned_after_overdue} tone="success" />
       </div>
 
       <div className="content-grid two-col">

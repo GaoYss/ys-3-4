@@ -65,6 +65,7 @@ class BorrowRecord(models.Model):
     borrow_date = models.DateField("借出日期", default=timezone.localdate)
     expected_return_date = models.DateField("预计归还日期")
     actual_return_date = models.DateField("实际归还日期", null=True, blank=True)
+    was_overdue = models.BooleanField("是否曾经逾期", default=False)
     status = models.CharField("状态", max_length=32, choices=Status.choices, default=Status.BORROWED)
     notes = models.TextField("备注", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
